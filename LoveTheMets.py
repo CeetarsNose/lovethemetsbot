@@ -34,6 +34,7 @@ import typing as t
 import smtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -46,7 +47,7 @@ blueskyHandle = str(os.getenv('blueskyHandle')) ## This is the full bluesky hand
 blueskyPassword = str(os.getenv('blueskyPassword')) ## Create and use a so-called "app password" and post the result here
 twitterListId = str(os.getenv('twitterListId')) ## This is a string variable that should correspond to the Twitter List's ID
 rapidApiKey = str(os.getenv('rapidApiKey')) ## The so-called API Key which serves as your authentication string for any calls to the RapidAPI service
-metspress = str(os.getenv('metspress'))
+metspress = str(os.getenv('metspress')) ## url to scrape for Mets press releases. https://www.mlb.com/mets/news/topic/mets-press-releases changing the last / to something like blue-jays-press-releases works
 ## Created this function to send alerts when the bot starts or stops.
 ## This is useful to understand when forced restarts happen as well as to identify when the process hangs
 def emailStatus(message):
@@ -272,6 +273,7 @@ responseTweets = requests.get(urlTweets, headers=headersTweets, params=querystri
 listresults = json.loads(responseTweets.text)
 timeline = listresults["timeline"]
 xeets = list()
+releases = list()
 quotes = "\n\n💬\n\n"
 for xeet in timeline:
     img_url = ''
@@ -305,12 +307,23 @@ for xeet in timeline:
             print(textToPost)
             xeets.append(textToPost)
 
+#scraping mets.com for the three most recent press releases as a base.
+URL = metspress
+r = requests.get(URL)
+output=""
+soup = BeautifulSoup(r.content, 'html.parser')
+articles=soup.findAll('li',attrs={'class':'article-navigation__item'})
+print(articles[0].a['href'])
+releases.append(articles[0].span.text)
+releases.append(articles[1].span.text)
+releases.append(articles[2].span.text)
+
 ## Now that we have all active tweets in memory, check back every so often and, if there are any new ones, post them to Bluesky!
 ## The python list "xeets" stores the tweets.  Every loop through the timeline will now check to see if a tweet exists in xeets.  If missing,
 ## it will a) be added to xeets and b) be posted to Bluesky
 
 sleepInterval = 300  ##5 minutes
-rebootInterval = sleepInterval*12*240 ##24 hours
+rebootInterval = sleepInterval*12*240 ##240 hours
 while rebootInterval > sleepInterval:
     count = 0
     rebootInterval = rebootInterval - sleepInterval
@@ -374,6 +387,18 @@ while rebootInterval > sleepInterval:
                         else:
                             print("Tweet has too many characters or rate limit exceeded.  Not posting to Bluesky -- " + textToPost)
                             logging.error("Tweet has too many characters or rate limit exceeded.  Not posting to Bluesky -- " + textToPost)
+    
+        URL = metspress
+        r = requests.get(URL)
+        output=""
+        soup = BeautifulSoup(r.content, 'html.parser')
+        articles=soup.findAll('li',attrs={'class':'article-navigation__item'})
+        if (articles[0].span.text) not in releases :
+            releases.append(articles[0].span.text)
+            releasepost="New Mets Press Release: "+articles[0].span.text+"\n "+str(articles[0].a['href'])
+            postToBluesky(releasepost,img_url,client)
+
+    
     except Exception as e:
         print(f"Issue encountered with Twitter API.  Moving on: {e}")
         logging.error(f"Issue encountered with Twitter API.  Moving on: {e}")
