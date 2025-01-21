@@ -33,17 +33,20 @@ import httpx
 import typing as t
 import smtplib
 from email.mime.text import MIMEText
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ##User-defined variables
-moduleName = os.getenv('moduleName')  ## Used in the Subject line of status emails
-gmailPW = os.getenv('gmailPW')  ## This app uses gmail to send status alerts.  Set up an App Password in Google and copy the result here
-gmailUser = os.getenv('gmailUser') ## The email address associated with the google account
-logFileName = os.getenv('logFileName') ## The name of the log file to post status messages.  Useful for troubleshooting
-blueskyHandle = os.getenv('blueskyHandle') ## This is the full bluesky handle (e.g. myhandle.bsky.social)
-blueskyPassword = os.getenv('blueskyPassword') ## Create and use a so-called "app password" and post the result here
-twitterListId = os.getenv('twitterListId') ## This is a string variable that should correspond to the Twitter List's ID
-rapidApiKey = os.getenv('rapidApiKey') ## The so-called API Key which serves as your authentication string for any calls to the RapidAPI service
-metspress = os.getenv('metspress')
+moduleName = str(os.getenv('moduleName'))  ## Used in the Subject line of status emails
+gmailPW = str(os.getenv('gmailPW'))  ## This app uses gmail to send status alerts.  Set up an App Password in Google and copy the result here
+gmailUser = str(os.getenv('gmailUser')) ## The email address associated with the google account
+logFileName = str(os.getenv('logFileName')) ## The name of the log file to post status messages.  Useful for troubleshooting
+blueskyHandle = str(os.getenv('blueskyHandle')) ## This is the full bluesky handle (e.g. myhandle.bsky.social)
+blueskyPassword = str(os.getenv('blueskyPassword')) ## Create and use a so-called "app password" and post the result here
+twitterListId = str(os.getenv('twitterListId')) ## This is a string variable that should correspond to the Twitter List's ID
+rapidApiKey = str(os.getenv('rapidApiKey')) ## The so-called API Key which serves as your authentication string for any calls to the RapidAPI service
+metspress = str(os.getenv('metspress'))
 ## Created this function to send alerts when the bot starts or stops.
 ## This is useful to understand when forced restarts happen as well as to identify when the process hangs
 def emailStatus(message):
